@@ -1,0 +1,5 @@
+body { font-family: sans-serif; padding: 2rem; }
+.auth-card { max-width: 400px; margin: auto; }
+.auth-card input { display: block; width: 100%; margin: 8px 0; padding: 10px; }
+.auth-card button { margin: 8px 4px; padding: 10px 20px; cursor: pointer; }
+.error { color: red; margin: 8px 0; }
