@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Small Business Finance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #F7F3ED;
+    --bg2: #FAF7F2;
+    --bg3: #E0D6C8;
+    --border: rgba(201,168,76,0.25);
+    --border-accent: rgba(201,168,76,0.45);
+    --text: #1A1612;
+    --text-mid: #3D3530;
+    --text-soft: #6B5F56;
+    --accent: #C9A84C;
+    --accent-dim: rgba(201,168,76,0.12);
+    --accent-dark: #8B6914;
+    --green: #2D6A4F;
+    --green-dim: rgba(45,106,79,0.1);
+    --red: #8B2635;
+    --red-dim: rgba(139,38,53,0.08);
+    --radius: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Playfair+Display', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 80%, rgba(201,168,76,0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem 1.25rem 3rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Setup screen */
+  #setup-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .setup-card {
+    background: var(--bg2);
+    border: 1px solid var(--border-accent);
+    border-radius: 8px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 520px;
+  }
+
+  .setup-logo {
+    font-family: 'Playfair+Display', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+  }
+
+  .setup-title {
+    font-family: 'Playfair+Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .setup-sub {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-bottom: 2rem;
+    line-height: 1.7;
+  }
+
+  .form-group {
+    margin-bottom: 1.1rem;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-family: 'Playfair+Display', monospace;
+  }
+
+  .form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 11px 14px;
+    font-family: 'Playfair+Display', monospace;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text-soft); }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .btn-primary {
+    width: 100%;
+    background: var(--text);
+    color: #E8D5A3;
+    border: none;
+    border-radius: 4px;
+    padding: 13px;
+    font-family: 'Playfair+Display', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: opacity 0.15s;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .btn-primary:hover { opacity: 0.88; }
+
+  /* Dashboard */
+  #dashboard { display: none; }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .biz-name {
+    font-family: 'Playfair+Display', serif;
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .biz-type {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+
+  .btn-reset {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 6px 12px;
+    cursor: pointer;
+    font-family: 'Playfair+Display', monospace;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .btn-reset:hover { border-color: var(--accent); color: var(--accent-dark); }
+
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .metric {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+  }
+
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 8px;
+  }
+
+  .metric-value {
+    font-family: 'Playfair+Display', serif;
+    font-size: 1.9rem;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .metric-value.g { color: #2D6A4F; }
+  .metric-value.r { color: #8B2635; }
+  .metric-value.a { color: #C9A84C; }
+
+  .metric-sub { font-size: 11px; color: var(--text-soft); }
+
+  /* Goal bar */
+  .goal-bar-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .goal-bar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .goal-bar-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-soft); }
+  .goal-bar-pct { font-family: 'Playfair+Display', serif; font-size: 1.1rem; font-weight: 500; color: var(--text); }
+
+  .goal-track {
+    height: 5px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .goal-fill {
+    height: 5px;
+    background: var(--green);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .goal-fill.warn { background: var(--accent); }
+
+  .goal-sub {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-soft);
+  }
+
+  /* Two col */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 10px;
+    margin-bottom: 1rem;
+  }
+
+  .panel {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+
+  .panel-title {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-dark);
+    margin-bottom: 1.1rem;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    font-family: 'Playfair+Display', monospace;
+  }
+
+  /* Sliders */
+  .sl-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 13px;
+  }
+
+  .sl-label {
+    font-size: 11px;
+    color: var(--text-soft);
+    min-width: 155px;
+    font-family: 'Playfair+Display', monospace;
+  }
+
+  .sl-row input[type=range] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 2px;
+    background: var(--bg3);
+    border-radius: 1px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .sl-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--bg2);
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+
+  .sl-row input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .sl-val {
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 65px;
+    text-align: right;
+    color: var(--text);
+    font-family: 'Playfair+Display', monospace;
+  }
+
+  /* Tables */
+  .tbl { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .tbl th {
+    text-align: left;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+  .tbl td {
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-mid);
+    vertical-align: middle;
+  }
+  .tbl td:last-child { text-align: right; color: var(--text); font-weight: 500; font-family: 'Playfair+Display', monospace; }
+  .tbl tr:last-child td { border-bottom: none; }
+
+  .tag {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .tag-in { background: var(--green-dim); color: var(--green); }
+  .tag-ex { background: var(--red-dim); color: var(--red); }
+  .tag-sl { background: var(--accent-dim); color: var(--accent); }
+
+  /* Chart */
+  .chart-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .chart-legend { display: flex; gap: 1.2rem; font-size: 11px; color: var(--text-soft); margin-bottom: 1rem; }
+  .ldot { width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px; vertical-align: middle; }
+
+  /* Reinvest & goal panels */
+  .bottom-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+
+  /* Watermark */
+  .watermark {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-soft);
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.08em;
+  }
+
+  .watermark span { color: var(--accent); }
+
+  @media (max-width: 680px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .two-col, .bottom-row { grid-template-columns: 1fr; }
+    .biz-name { font-size: 1.1rem; }
+    .sl-label { min-width: 120px; font-size: 11px; }
+    .setup-card { padding: 1.75rem 1.25rem; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen">
+  <div class="setup-card">
+    <div class="setup-logo">CTyTracker — Finance Dashboard</div>
+    <h1 class="setup-title">Set up your<br>business tracker</h1>
+    <p class="setup-sub">Enter your business details once and get a personalised financial dashboard instantly.</p>
+
+    <div class="form-group">
+      <label class="form-label">Business name</label>
+      <input class="form-input" id="biz-name-input" type="text" placeholder="e.g. Chipo's BrandName">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Type of business</label>
+      <input class="form-input" id="biz-type-input" type="text" placeholder="e.g. Candle maker, Hair salon, Clothing">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Income goal (R) — by your target month</label>
+      <input class="form-input" id="goal-input" type="number" placeholder="e.g. 50000" value="50000">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Starting month</label>
+        <select class="form-input" id="start-month-input">
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3" selected>April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11">December</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Target month</label>
+        <select class="form-input" id="target-month-input">
+          <option value="0">January</option><option value="1">February</option>
+          <option value="2">March</option><option value="3">April</option>
+          <option value="4">May</option><option value="5">June</option>
+          <option value="6">July</option><option value="7">August</option>
+          <option value="8">September</option><option value="9">October</option>
+          <option value="10">November</option><option value="11" selected>December</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Price per product (R)</label>
+        <input class="form-input" id="price-input" type="number" placeholder="200" value="200">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Cost per batch (R)</label>
+        <input class="form-input" id="cost-input" type="number" placeholder="3000" value="3000">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Units sold / batch</label>
+        <input class="form-input" id="units-input" type="number" placeholder="50" value="50">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Batches per month</label>
+        <input class="form-input" id="batches-input" type="number" placeholder="1" value="1">
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="launchDashboard()">Generate my dashboard</button>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+<div class="page">
+
+  <div class="top-bar">
+    <div>
+      <div class="biz-name" id="dash-biz-name">—</div>
+      <div class="biz-type" id="dash-biz-type">—</div>
+    </div>
+    <button class="btn-reset" onclick="resetDashboard()">Change business</button>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="goal-bar-wrap">
+    <div class="goal-bar-top">
+      <span class="goal-bar-label" id="goal-bar-label">Annual goal</span>
+      <span class="goal-bar-pct" id="goal-bar-pct">0%</span>
+    </div>
+    <div class="goal-track"><div class="goal-fill" id="goal-fill" style="width:0%"></div></div>
+    <div class="goal-sub">
+      <span id="goal-sub-left">R0 projected</span>
+      <span id="goal-sub-right">R50 000 target</span>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">Adjust your numbers</div>
+      <div class="sl-row">
+        <span class="sl-label">Units sold / batch</span>
+        <input type="range" min="5" max="200" step="1" id="sl-sold" value="30">
+        <span class="sl-val" id="out-sold">30</span>
+      </div>
+      <div class="sl-row">
+        <span class="sl-label">Batches per month</span>
+        <input type="range" min="1" max="12" step="1" id="sl-batches" value="1">
+        <span class="sl-val" id="out-batches">1</span>
+      </div>
+      <div class="sl-row">
+        <span class="sl-label">Price per unit (R)</span>
+        <input type="range" min="20" max="2000" step="10" id="sl-price" value="180">
+        <span class="sl-val" id="out-price">R180</span>
+      </div>
+      <div class="sl-row">
+        <span class="sl-label">Cost per batch (R)</span>
+        <input type="range" min="100" max="20000" step="50" id="sl-cost" value="1530">
+        <span class="sl-val" id="out-cost">R1 530</span>
+      </div>
+      <div class="sl-row">
+        <span class="sl-label">Pay yourself / month (R)</span>
+        <input type="range" min="0" max="10000" step="100" id="sl-pay" value="500">
+        <span class="sl-val" id="out-pay">R500</span>
+      </div>
+      <div class="sl-row">
+        <span class="sl-label">Other expenses / month (R)</span>
+        <input type="range" min="0" max="5000" step="50" id="sl-exp" value="200">
+        <span class="sl-val" id="out-exp">R200</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Monthly breakdown</div>
+      <table class="tbl" id="monthly-tbl"></table>
+      <div class="panel-title" style="margin-top:1.1rem">Annual projection</div>
+      <table class="tbl" id="annual-tbl"></table>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <div class="panel-title" id="chart-title">Cumulative profit — projection</div>
+    <div class="chart-legend">
+      <span><span class="ldot" style="background:#2D6A4F"></span>Cumulative profit</span>
+      <span><span class="ldot" style="background:#C9A84C;border-radius:0;height:2px;width:14px;vertical-align:middle"></span>Annual goal</span>
+    </div>
+    <div style="position:relative;width:100%;height:240px">
+      <canvas id="chart" role="img" aria-label="12 month cumulative profit projection chart">Cumulative profit projection.</canvas>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <div class="panel">
+      <div class="panel-title">Goal status</div>
+      <table class="tbl" id="goal-tbl"></table>
+    </div>
+    <div class="panel">
+      <div class="panel-title">Reinvestment split (gross profit)</div>
+      <table class="tbl">
+        <thead><tr><th>Bucket</th><th>%</th><th>Monthly</th></tr></thead>
+        <tbody>
+          <tr><td>Reinvest in stock</td><td>40%</td><td id="sp-stock">—</td></tr>
+          <tr><td>Pay yourself</td><td>20%</td><td id="sp-pay">—</td></tr>
+          <tr><td>Save toward goal</td><td>40%</td><td id="sp-save">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="watermark">Built with <span>CTyTracker</span> — personalised for every business</div>
+</div>
+</div>
+
+<script>
+let GOAL = 50000;
+let START_MONTH = 3;
+let TARGET_MONTH = 11;
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getMonthsInRange(start, target) {
+  if (target >= start) return target - start + 1;
+  return (12 - start) + target + 1;
+}
+let chart;
+
+function fmt(n) { return 'R' + Math.round(n).toLocaleString('en-ZA'); }
+function pct(n) { return Math.round(Math.max(0, Math.min(100, n))) + '%'; }
+
+function launchDashboard() {
+  const name = document.getElementById('biz-name-input').value.trim() || 'My Business';
+  const type = document.getElementById('biz-type-input').value.trim() || 'Small business';
+  GOAL = parseFloat(document.getElementById('goal-input').value) || 50000;
+  START_MONTH = parseInt(document.getElementById('start-month-input').value);
+  TARGET_MONTH = parseInt(document.getElementById('target-month-input').value);
+  const price = parseFloat(document.getElementById('price-input').value) || 180;
+  const cost = parseFloat(document.getElementById('cost-input').value) || 1530;
+  const units = parseFloat(document.getElementById('units-input').value) || 30;
+  const batches = parseFloat(document.getElementById('batches-input').value) || 1;
+
+  const numMonths = getMonthsInRange(START_MONTH, TARGET_MONTH);
+  const periodLabel = MONTH_FULL[START_MONTH] + ' \u2192 ' + MONTH_FULL[TARGET_MONTH] + ' (' + numMonths + ' months)';
+
+  document.getElementById('dash-biz-name').textContent = name;
+  document.getElementById('dash-biz-type').textContent = type + ' \u00b7 ' + periodLabel;
+  document.getElementById('goal-bar-label').textContent = 'Goal by ' + MONTH_FULL[TARGET_MONTH] + ' \u2014 ' + fmt(GOAL);
+  document.getElementById('goal-sub-right').textContent = fmt(GOAL) + ' by ' + MONTH_FULL[TARGET_MONTH];
+
+  document.getElementById('sl-sold').value = units;
+  document.getElementById('sl-batches').value = batches;
+  document.getElementById('sl-price').value = price;
+  document.getElementById('sl-cost').value = cost;
+
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  calc();
+}
+
+function resetDashboard() {
+  document.getElementById('setup-screen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+function calc() {
+  const sold = +document.getElementById('sl-sold').value;
+  const batches = +document.getElementById('sl-batches').value;
+  const price = +document.getElementById('sl-price').value;
+  const cost = +document.getElementById('sl-cost').value;
+  const pay = +document.getElementById('sl-pay').value;
+  const exp = +document.getElementById('sl-exp').value;
+
+  document.getElementById('out-sold').textContent = sold;
+  document.getElementById('out-batches').textContent = batches;
+  document.getElementById('out-price').textContent = 'R' + price;
+  document.getElementById('out-cost').textContent = 'R' + Math.round(cost).toLocaleString('en-ZA');
+  document.getElementById('out-pay').textContent = 'R' + pay;
+  document.getElementById('out-exp').textContent = 'R' + exp;
+
+  const rev = sold * batches * price;
+  const cogs = cost * batches;
+  const gross = rev - cogs;
+  const totalExp = pay + exp;
+  const net = gross - totalExp;
+  const margin = rev > 0 ? (net / rev * 100) : 0;
+
+  const numMonths = getMonthsInRange(START_MONTH, TARGET_MONTH);
+  const periodNet = net * numMonths;
+  const monthsNeeded = net > 0 ? Math.ceil(GOAL / net) : 999;
+  const unitsNeeded = net > 0 ? Math.ceil((GOAL / numMonths + totalExp + cogs) / price) : '—';
+  const neededPerMonth = numMonths > 0 ? GOAL / numMonths : GOAL;
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">Monthly revenue</div>
+      <div class="metric-value a">${fmt(rev)}</div>
+      <div class="metric-sub">${sold * batches} units</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Monthly net profit</div>
+      <div class="metric-value ${net >= 0 ? 'g' : 'r'}">${fmt(net)}</div>
+      <div class="metric-sub">after all costs</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Profit margin</div>
+      <div class="metric-value">${Math.round(margin)}%</div>
+      <div class="metric-sub">net margin</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">${numMonths}-month projection</div>
+      <div class="metric-value ${periodNet >= GOAL ? 'g' : ''}">${fmt(periodNet)}</div>
+      <div class="metric-sub">vs ${fmt(GOAL)} goal</div>
+    </div>
+  `;
+
+  const gPct = periodNet / GOAL * 100;
+  const fill = document.getElementById('goal-fill');
+  fill.style.width = pct(gPct);
+  fill.className = 'goal-fill' + (gPct < 100 ? ' warn' : '');
+  document.getElementById('goal-bar-pct').textContent = pct(gPct);
+  document.getElementById('goal-sub-left').textContent = fmt(Math.max(0, periodNet)) + ' projected';
+
+  document.getElementById('monthly-tbl').innerHTML = `
+    <thead><tr><th>Item</th><th></th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Revenue</td><td><span class="tag tag-in">income</span></td><td>${fmt(rev)}</td></tr>
+      <tr><td>Stock cost</td><td><span class="tag tag-ex">expense</span></td><td>&#x2212;${fmt(cogs)}</td></tr>
+      <tr><td>Pay yourself</td><td><span class="tag tag-sl">salary</span></td><td>&#x2212;${fmt(pay)}</td></tr>
+      <tr><td>Other expenses</td><td><span class="tag tag-ex">expense</span></td><td>&#x2212;${fmt(exp)}</td></tr>
+      <tr><td><strong>Net profit</strong></td><td></td><td style="color:${net >= 0 ? 'var(--green)' : 'var(--red)'}">${fmt(net)}</td></tr>
+    </tbody>
+  `;
+
+  document.getElementById('annual-tbl').innerHTML = `
+    <thead><tr><th>Item (${numMonths} months)</th><th>Amount</th></tr></thead>
+    <tbody>
+      <tr><td>Total revenue</td><td>${fmt(rev * numMonths)}</td></tr>
+      <tr><td>Total expenses</td><td>&#x2212;${fmt((cogs + totalExp) * numMonths)}</td></tr>
+      <tr><td><strong>Total net profit</strong></td><td style="color:${periodNet >= GOAL ? 'var(--green)' : 'var(--red)'}">${fmt(periodNet)}</td></tr>
+    </tbody>
+  `;
+
+  const shortfall = GOAL - periodNet;
+  document.getElementById('goal-tbl').innerHTML = `
+    <thead><tr><th>Metric</th><th>Value</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>vs goal by ${MONTH_FULL[TARGET_MONTH]}</td><td>${fmt(periodNet)}</td><td style="font-size:11px;color:${shortfall <= 0 ? 'var(--green)' : 'var(--red)'}">${shortfall <= 0 ? 'On track \u2713' : fmt(shortfall) + ' short'}</td></tr>
+      <tr><td>Months needed</td><td>${net > 0 ? monthsNeeded : 'N/A'}</td><td style="font-size:11px;color:var(--text-soft)">${monthsNeeded <= numMonths ? 'Within deadline' : 'Beyond deadline'}</td></tr>
+      <tr><td>Units / month needed</td><td>${typeof unitsNeeded === 'number' ? unitsNeeded : '\u2014'}</td><td style="font-size:11px;color:var(--text-soft)">to hit goal in time</td></tr>
+    </tbody>
+  `;
+
+  document.getElementById('sp-stock').textContent = fmt(gross * 0.4);
+  document.getElementById('sp-pay').textContent = fmt(gross * 0.2);
+  document.getElementById('sp-save').textContent = fmt(gross * 0.4);
+
+  // Build chart labels from START_MONTH to TARGET_MONTH
+  const chartMonths = [];
+  for (let i = 0; i < numMonths; i++) {
+    chartMonths.push(MONTH_NAMES[(START_MONTH + i) % 12]);
+  }
+  const cumData = chartMonths.map((_, i) => Math.round(net * (i + 1)));
+
+  document.getElementById('chart-title').textContent = 'Cumulative profit \u2014 ' + MONTH_FULL[START_MONTH] + ' to ' + MONTH_FULL[TARGET_MONTH] + ' (' + numMonths + '-month projection)';
+
+  if (chart) chart.destroy();
+  chart = new Chart(document.getElementById('chart'), {
+    type: 'bar',
+    data: {
+      labels: chartMonths,
+      datasets: [
+        {
+          label: 'Cumulative profit',
+          data: cumData,
+          backgroundColor: cumData.map(v => v >= GOAL ? '#2D6A4F' : '#9FE1CB'),
+          borderRadius: 3, borderSkipped: false
+        },
+        {
+          label: 'Goal',
+          data: Array(numMonths).fill(GOAL),
+          type: 'line',
+          borderColor: '#C9A84C',
+          borderDash: [5,4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + fmt(c.parsed.y) } } },
+      scales: {
+        y: { ticks: { callback: v => 'R'+(v/1000).toFixed(0)+'k', font:{size:10,family:'DM Mono'}, color:'#6B5F56' }, grid:{color:'rgba(26,22,18,0.06)'}, border:{dash:[3,3]} },
+        x: { ticks: { font:{size:10,family:'DM Mono'}, color:'#6B5F56' }, grid:{display:false} }
+      }
+    }
+  });
+}
+
+['sl-sold','sl-batches','sl-price','sl-cost','sl-pay','sl-exp'].forEach(id => {
+  document.getElementById(id).addEventListener('input', calc);
+});
+</script>
+</body>
+</html>

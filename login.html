@@ -1,0 +1,27 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login — CTTracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+
+    <div id="error-msg" class="error" style="display:none"></div>
+
+    <input  id="email"    type="email"    placeholder="Email">
+    <input  id="password" type="password" placeholder="Password">
+
+    <button id="btn-login">Sign in</button>
+    <button id="btn-register">Create account</button>
+    <button id="btn-google"  class="google">Continue with Google</button>
+
+    <p>No account? <a href="#" id="toggle">Register</a></p>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>
