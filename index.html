@@ -406,6 +406,33 @@
     .form-row { grid-template-columns: 1fr; }
   }
 </style>
+  <!-- Auth guard — paste this as first script in <head> -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const app = initializeApp({
+    apiKey: "AIzaSyBFJE-nSGsBUkQZ2xNphNWt0vzxAHktDa4",
+    authDomain: "cttracker-a4624.firebaseapp.com",
+    projectId: "cttracker-a4624",
+    storageBucket: "cttracker-a4624.firebasestorage.app",
+    messagingSenderId: "789105337687",
+    appId: "1:789105337687:web:ec3b52794899ab24c84a12"
+  });
+
+  const auth = getAuth(app);
+
+  // Hide page until we know auth state
+  document.documentElement.style.visibility = "hidden";
+
+  onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      location.href = "login.html"; // not logged in → go to login
+    } else {
+      document.documentElement.style.visibility = "visible"; // logged in → show page
+    }
+  });
+</script>
 </head>
 <body>
 
