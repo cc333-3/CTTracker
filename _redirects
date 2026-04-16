@@ -1,0 +1,2 @@
+# Send visitors to login page by default
+/   /login.html   302
